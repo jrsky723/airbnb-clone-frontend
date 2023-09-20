@@ -30,8 +30,8 @@ export default function Header() {
   return (
     <HStack
       justifyContent={"space-between"}
-      py={10}
-      px={5}
+      py={5}
+      px={40}
       borderBottomWidth={1}
     >
       <Box color={logoColor}>
