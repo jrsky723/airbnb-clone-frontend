@@ -34,8 +34,8 @@ export default function Room() {
           <Text display={"block"} as="b" noOfLines={1} fontSize="md">
             Torino, Piemonte, Italy
           </Text>
-          <HStack spacing={1}>
-            <FaStar size={15} />
+          <HStack spacing={1} alignItems="center">
+            <FaStar size={12} />
             <Text>5.0</Text>
           </HStack>
         </Grid>
