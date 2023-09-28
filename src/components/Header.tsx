@@ -9,6 +9,7 @@ import {
   useColorMode,
   useColorModeValue,
   useDisclosure,
+  useRadio,
 } from "@chakra-ui/react";
 import { FaAirbnb, FaMoon, FaSun } from "react-icons/fa";
 import LoginModal from "./LoginModal";
@@ -70,7 +71,7 @@ export default function Header() {
               </LightMode>
             </>
           ) : (
-            <Avatar size={"md"} />
+            <Avatar name={user?.name} src={user?.avatar} size={"md"} />
           )
         ) : null}
       </HStack>
