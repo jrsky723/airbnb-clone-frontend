@@ -10,6 +10,7 @@ import {
   MenuItem,
   MenuList,
   Stack,
+  ToastId,
   useColorMode,
   useColorModeValue,
   useDisclosure,
@@ -22,7 +23,8 @@ import SighUpModal from "./SignUpModal";
 import { Link } from "react-router-dom";
 import useUser from "../lib/useUser";
 import { logOut } from "../api";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef } from "react";
 
 export default function Header() {
   const { userLoading, isLoggedIn, user } = useUser();
@@ -41,20 +43,29 @@ export default function Header() {
   const Icon = useColorModeValue(FaMoon, FaSun);
   const toast = useToast();
   const queryClient = useQueryClient();
+  const toastId = useRef<ToastId>();
+  const mutation = useMutation(logOut, {
+    onMutate: () => {
+      toastId.current = toast({
+        title: "Login out...",
+        description: "See you later!",
+        status: "loading",
+        position: "bottom-right",
+      });
+    },
+    onSuccess: () => {
+      if (toastId.current) {
+        queryClient.refetchQueries(["me"]);
+        toast.update(toastId.current, {
+          title: "Done!",
+          description: "See you later!",
+          status: "success",
+        });
+      }
+    },
+  });
   const onLogOut = async () => {
-    const toastId = toast({
-      title: "Login out...",
-      description: "See you later!",
-      status: "loading",
-      position: "bottom-right",
-    });
-    await logOut();
-    queryClient.invalidateQueries(["me"]);
-    toast.update(toastId, {
-      title: "Done!",
-      description: "See you later!",
-      status: "success",
-    });
+    mutation.mutate();
   };
   return (
     <Stack
