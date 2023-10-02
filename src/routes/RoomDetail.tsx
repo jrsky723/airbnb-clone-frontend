@@ -8,22 +8,37 @@ import {
   Heading,
   HStack,
   Image,
+  InputGroup,
+  InputLeftAddon,
+  Select,
   Skeleton,
   Text,
+  useToast,
   VStack,
 } from "@chakra-ui/react";
 import "../calendar.css";
-import { FaEdit, FaStar } from "react-icons/fa";
-import { useQuery } from "@tanstack/react-query";
+import { FaEdit, FaStar, FaUserFriends } from "react-icons/fa";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import { checkBooking, getRoom, getRoomReviews } from "../api";
+import {
+  checkBooking,
+  getRoom,
+  getRoomReviews,
+  IRoomBookingError,
+  IRoomBookingSuccess,
+  IRoomBookingVariables,
+  roomBooking,
+} from "../api";
 import { IReview, IRoomDetail } from "../types";
 import { useState } from "react";
 import { Helmet } from "react-helmet";
+import { useForm } from "react-hook-form";
+import { formatDate } from "../lib/utils";
 
 export default function RoomDetail() {
+  const { register, handleSubmit } = useForm<IRoomBookingVariables>();
   const { roomPk } = useParams();
   const { isLoading, data } = useQuery<IRoomDetail>([`rooms`, roomPk], getRoom);
   const { data: reviewsData } = useQuery<IReview[]>(
@@ -47,6 +62,32 @@ export default function RoomDetail() {
   const onEditClick = (event: React.SyntheticEvent<HTMLButtonElement>) => {
     event.preventDefault();
     navigate(`/rooms/${data?.id}/edit`);
+  };
+  const toast = useToast();
+  const roomBookingMutation = useMutation<
+    IRoomBookingSuccess,
+    IRoomBookingError,
+    IRoomBookingVariables
+  >(roomBooking, {
+    onSuccess: (data) => {
+      toast({
+        title: "Booking complete!",
+        description: `From: ${data.check_in} To: ${data.check_out} Booking Completed`,
+        status: "success",
+        position: "bottom-right",
+      });
+    },
+  });
+  const doBooking = (data: IRoomBookingVariables) => {
+    if (dates && roomPk) {
+      const [firstDate, secondDate] = dates;
+      const checkIn = formatDate(firstDate);
+      const checkOut = formatDate(secondDate);
+      data.check_in = checkIn;
+      data.check_out = checkOut;
+      data.roomPk = roomPk;
+      roomBookingMutation.mutate(data);
+    }
   };
   return (
     <Box
@@ -170,18 +211,42 @@ export default function RoomDetail() {
             maxDate={new Date(Date.now() + 60 * 60 * 24 * 7 * 4 * 6 * 1000)}
             selectRange
           />
-          <Button
-            disabled={!checkBookingData?.ok}
-            isLoading={isCheckingBooking && dates !== undefined}
-            my={5}
-            w={"100%"}
-            colorScheme={"red"}
+
+          <Grid
+            templateColumns={"1fr"}
+            as={"form"}
+            onSubmit={handleSubmit(doBooking)}
           >
-            Make Booking
-          </Button>
-          {!isCheckingBooking && !checkBookingData?.ok ? (
-            <Text color="red.500">Can't book on those dates, sorry.</Text>
-          ) : null}
+            <HStack mt={5} mb={2}>
+              <Text>Guests</Text>
+              <InputGroup>
+                <InputLeftAddon children={<FaUserFriends />} />
+                <Select
+                  {...register("guests", { required: true })}
+                  defaultValue={1}
+                  w={"55%"}
+                >
+                  {[1, 2, 3, 4, 5].map((guest) => (
+                    <option key={guest} value={guest}>
+                      {guest}
+                    </option>
+                  ))}
+                </Select>
+              </InputGroup>
+            </HStack>
+            <Button
+              type={"submit"}
+              isDisabled={!checkBookingData?.ok}
+              isLoading={isCheckingBooking && dates !== undefined}
+              w={"70%"}
+              colorScheme={"red"}
+            >
+              Make Booking
+            </Button>
+            {!isCheckingBooking && !checkBookingData?.ok ? (
+              <Text color="red.500">Can't book on those dates, sorry.</Text>
+            ) : null}
+          </Grid>
         </Box>
       </Grid>
     </Box>
