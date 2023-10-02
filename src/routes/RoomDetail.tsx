@@ -13,9 +13,9 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import "../calendar.css";
-import { FaStar } from "react-icons/fa";
+import { FaEdit, FaStar } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { checkBooking, getRoom, getRoomReviews } from "../api";
@@ -43,6 +43,11 @@ export default function RoomDetail() {
       enabled: dates !== undefined,
     }
   );
+  const navigate = useNavigate();
+  const onEditClick = (event: React.SyntheticEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    navigate(`/rooms/${data?.id}/edit`);
+  };
   return (
     <Box
       pb={40}
@@ -56,7 +61,12 @@ export default function RoomDetail() {
         <title>{data ? data.name : "Loading..."}</title>
       </Helmet>
       <Skeleton height={"43px"} isLoaded={!isLoading}>
-        <Heading>{data?.name}</Heading>
+        <HStack>
+          <Heading>{data?.name}</Heading>
+          <Button variant={"unstyled"} onClick={onEditClick}>
+            {data?.is_owner ? <FaEdit size={25} /> : null}
+          </Button>
+        </HStack>
       </Skeleton>
       <Grid
         mt={8}
@@ -161,13 +171,13 @@ export default function RoomDetail() {
             selectRange
           />
           <Button
-            isDisabled={!checkBookingData?.ok}
-            isLoading={isCheckingBooking}
+            disabled={!checkBookingData?.ok}
+            isLoading={isCheckingBooking && dates !== undefined}
             my={5}
-            w="100%"
+            w={"100%"}
             colorScheme={"red"}
           >
-            Make booking
+            Make Booking
           </Button>
           {!isCheckingBooking && !checkBookingData?.ok ? (
             <Text color="red.500">Can't book on those dates, sorry.</Text>
