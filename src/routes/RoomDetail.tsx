@@ -12,6 +12,7 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
+import "../calendar.css";
 import { FaStar } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
@@ -19,7 +20,8 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { checkBooking, getRoom, getRoomReviews } from "../api";
 import { IReview, IRoomDetail } from "../types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Helmet } from "react-helmet";
 
 export default function RoomDetail() {
   const { roomPk } = useParams();
@@ -28,10 +30,11 @@ export default function RoomDetail() {
     [`rooms`, roomPk, `reviews`],
     getRoomReviews
   );
+
+  const [dates, setDates] = useState<Date[]>();
   const handleDateChange = (value: any) => {
     setDates(value);
   };
-  const [dates, setDates] = useState<Date[]>();
   const { data: checkBookingData, isLoading: isCheckingBooking } = useQuery(
     ["check", roomPk, dates],
     checkBooking,
@@ -49,6 +52,9 @@ export default function RoomDetail() {
         lg: 40,
       }}
     >
+      <Helmet>
+        <title>{data ? data.name : "Loading..."}</title>
+      </Helmet>
       <Skeleton height={"43px"} isLoaded={!isLoading}>
         <Heading>{data?.name}</Heading>
       </Skeleton>
@@ -91,7 +97,7 @@ export default function RoomDetail() {
                 </Heading>
               </Skeleton>
               <Skeleton isLoaded={!isLoading} height={"30px"}>
-                <HStack justifyContent={"flex-start"} w="100%">
+                <HStack justifyContent={"flex-start"} w="100%" mt={5}>
                   <Text>
                     {data?.toilets} toliet{data?.toilets === 1 ? "" : "s"}
                   </Text>
@@ -155,7 +161,7 @@ export default function RoomDetail() {
             selectRange
           />
           <Button
-            disabled={!checkBookingData?.ok}
+            isDisabled={!checkBookingData?.ok}
             isLoading={isCheckingBooking}
             my={5}
             w="100%"
